@@ -5,31 +5,28 @@ metadata:
   namespace: argocd
 spec:
   project: default
-  sources:
-      # Main Git repo with all configuration
-    - repoURL: "https://github.com/hlaingminpaing/monitoring-helm.git"
-      targetRevision: main
-      ref: values-repo  # Reference for other sources to find values files
-    - chart: logging-operator
-      repoURL: ghcr.io/kube-logging/helm-charts
-      targetRevision: 5.2.0
-      helm:
-        valueFiles:
-          - $values-repo/loki-stack/values.yml
-    - chart: loki
-      repoURL: https://grafana.github.io/helm-charts
-      targetRevision: 6.29.0
-      helm:
-        valueFiles:
-          - $values-repo/logging/helm/loki.helm-values.yml
+  source:
+    repoURL: https://github.com/hlaingminpaing/monitoring-helm.git
+    targetRevision: main
+    path: kube-prometheus-stack
+    helm:
+      # For kube-prometheus-stack
+      releaseName: kube-prometheus-stack
+      valueFiles:
+        - kube-prometheus-stack/values.yaml
+      # Reference other charts as subcharts/dependencies
+      dependencies:
+        - name: grafana
+          version: "8.11.0"
+          repository: "https://grafana.github.io/helm-charts"
+        - name: kube-prometheus-stack
+          version: "72.7.0"  # Specific version for stability
+          repository: "https://prometheus-community.github.io/helm-charts"
 
-    - chart: kube-prometheus-stack
-      repoURL: https://prometheus-community.github.io/helm-charts
-      targetRevision: 72.7.0
-      helm:
-        releaseName: kube-prometheus-stack
-        valueFiles:
-          - $values-repo/kube-prometheus-stack/values.yaml
+      # Or use explicit helm parameters
+      parameters:
+        - name: "global.scrape_interval"
+          value: "15s"
   destination:
     server: https://kubernetes.default.svc
     namespace: monitoring
@@ -37,7 +34,3 @@ spec:
     automated:
       prune: true
       selfHeal: true
-    syncOptions:
-      - Validate=true
-      - CreateNamespace=true
-      - ServerSideApply=true
