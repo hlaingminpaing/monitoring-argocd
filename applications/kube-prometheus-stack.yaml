@@ -7,7 +7,7 @@ spec:
   project: default
   source:
     repoURL: https://github.com/hlaingminpaing/monitoring-helm.git
-    targetRevision: main
+    targetRevision: HEAD
     path: kube-prometheus-stack
     helm:
       valueFiles:
