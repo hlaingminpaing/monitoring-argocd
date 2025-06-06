@@ -1,17 +1,35 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: kube-prometheus-stack
+  name: monitoring-stack
   namespace: argocd
 spec:
   project: default
-  source:
-    repoURL: https://github.com/hlaingminpaing/monitoring-helm.git
-    targetRevision: HEAD
-    path: kube-prometheus-stack
-    # helm:
-    #   valueFiles:
-    #     - values.yaml
+  sources:
+      # Main Git repo with all configuration
+    - repoURL: "https://github.com/hlaingminpaing/monitoring-helm.git"
+      targetRevision: main
+      ref: values-repo  # Reference for other sources to find values files
+    - chart: logging-operator
+      repoURL: ghcr.io/kube-logging/helm-charts
+      targetRevision: 5.2.0
+      helm:
+        valueFiles:
+          - $values-repo/loki-stack/values.yml
+    - chart: loki
+      repoURL: https://grafana.github.io/helm-charts
+      targetRevision: 6.29.0
+      helm:
+        valueFiles:
+          - $values-repo/logging/helm/loki.helm-values.yml
+
+    - chart: kube-prometheus-stack
+      repoURL: https://prometheus-community.github.io/helm-charts
+      targetRevision: 72.7.0
+      helm:
+        releaseName: kube-prometheus-stack
+        valueFiles:
+          - $values-repo/kube-prometheus-stack/values.yaml
   destination:
     server: https://kubernetes.default.svc
     namespace: monitoring
@@ -20,4 +38,6 @@ spec:
       prune: true
       selfHeal: true
     syncOptions:
+      - Validate=true
       - CreateNamespace=true
+      - ServerSideApply=true
