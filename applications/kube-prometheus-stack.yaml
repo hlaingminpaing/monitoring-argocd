@@ -9,9 +9,9 @@ spec:
     repoURL: https://github.com/hlaingminpaing/monitoring-helm.git
     targetRevision: HEAD
     path: kube-prometheus-stack
-    helm:
-      valueFiles:
-        - values.yaml
+    # helm:
+    #   valueFiles:
+    #     - values.yaml
   destination:
     server: https://kubernetes.default.svc
     namespace: monitoring
