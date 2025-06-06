@@ -15,10 +15,15 @@ spec:
       dependencies:
         - name: loki
           version: "6.29.0"
-          repository: "https://grafana.github.io/helm-charts"         
+          repository: "https://grafana.github.io/helm-charts"
+        - name: promtail
+          version: "6.29.0" 
+          repository: "https://grafana.github.io/helm-charts"
       parameters:
-        - name: "global.scrape_interval"
-          value: "15s"
+        - name: "loki.persistence.storageClassName"
+          value: "standard"
+        - name: "loki.persistence.size"
+          value: "10Gi"
   destination:
     server: https://kubernetes.default.svc
     namespace: monitoring

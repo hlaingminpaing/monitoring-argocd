@@ -1,32 +1,28 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: monitoring-stack
+  name: prometheus-stack
   namespace: argocd
 spec:
   project: default
   source:
     repoURL: https://github.com/hlaingminpaing/monitoring-helm.git
-    targetRevision: main
+    targetRevision: HEAD
     path: kube-prometheus-stack
     helm:
-      # For kube-prometheus-stack
-      releaseName: kube-prometheus-stack
       valueFiles:
-        - kube-prometheus-stack/values.yaml
-      # Reference other charts as subcharts/dependencies
+        - values.yaml
       dependencies:
-        - name: grafana
-          version: "8.11.0"
-          repository: "https://grafana.github.io/helm-charts"
         - name: kube-prometheus-stack
-          version: "72.7.0"  # Specific version for stability
+          version: "72.7.0"
           repository: "https://prometheus-community.github.io/helm-charts"
-
-      # Or use explicit helm parameters
       parameters:
-        - name: "global.scrape_interval"
-          value: "15s"
+        - name: "prometheus.prometheusSpec.storageSpec.volumeClaimTemplate.spec.storageClassName"
+          value: "standard"
+        - name: "prometheus.prometheusSpec.storageSpec.volumeClaimTemplate.spec.resources.requests.storage"
+          value: "10Gi"
+        - name: "grafana.persistence.storageClassName"
+          value: "standard"
   destination:
     server: https://kubernetes.default.svc
     namespace: monitoring
@@ -34,3 +30,5 @@ spec:
     automated:
       prune: true
       selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
